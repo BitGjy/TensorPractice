@@ -6,7 +6,6 @@ from urllib.request import urlretrieve
 import zipfile
 import collections
 
-url = "http://mattmahoney.net/dc/"
 
 def download_data(filename, expected_bytes):
     if not os.path.exists(filename):
@@ -27,7 +26,7 @@ def read_data(filename):
         data = tf.compat.as_str(f.read(f.namelist()[0])).split()
     return data
 
-
+'''
 file= 'text8.zip'
 expected = 31344016
 
@@ -36,8 +35,9 @@ filename = download_data(file, expected)
 words = read_data(file)
 print(np.shape(words))
 print("Data_Size: ", len(words))
+'''
 
-vocabulary_size = 50000
+#vocabulary_size = 50000
 
 def build_dataset(words):
     count = [['UNK', -1]]
@@ -59,11 +59,12 @@ def build_dataset(words):
     count[0][1] = unk_count
     reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
     return data, count, dictionary, reverse_dictionary
-
+'''
 data, count, dictionary, reverse_dictionary = build_dataset(words)
+
 
 del words
 print("Size: ", len(count))
 print ('Most common words (+UNK)', count[:5])
 print('Sample data', data[:10], [reverse_dictionary[i] for i in data[:10]])
-
+'''
