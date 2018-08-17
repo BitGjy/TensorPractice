@@ -7,7 +7,7 @@ import zipfile
 import collections
 
 
-def download_data(filename, expected_bytes):
+def download_data(url, filename):
     if not os.path.exists(filename):
         filename, _ =  urlretrieve(url=url+filename, filename=filename)
         statinfo = os.stat(filename)
@@ -39,7 +39,7 @@ print("Data_Size: ", len(words))
 
 #vocabulary_size = 50000
 
-def build_dataset(words):
+def build_dataset(words, vocabulary_size):
     count = [['UNK', -1]]
     count.extend(collections.Counter(words).most_common(vocabulary_size - 1))
     dictionary = dict()
