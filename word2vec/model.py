@@ -12,15 +12,27 @@ class Word2vec:
         self.window_size = 5
         self.batch_size = 128
         self.num_sampled = 500
+        self.epoch = 10
+        self.train_sents_num = 10000
+
+        self.train_loss_records = []
+        self.train_loss_k10 = []
+
+        self.summary_writer = tf.summary.FileWriter(logdir="./logs")
+        self.summary_str = "./logs"
+
 
         self.__collect_data__()
         self.__create_graph__()
         self.__build_train__()
-        
+        self.__init_values__()
+
+      
     def __collect_data__(self):
         self.filename = input.download_data(self.url, self.filename)
         self.data = input.read_data(self.filename)
         self.data, self.count, self.dictionary, self.reverse_dictionary = input.build_dataset(self.data, self.vocabulary_size)
+    
 
     def __create_graph__(self):
         with tf.name_scope("graph"):
@@ -64,3 +76,54 @@ class Word2vec:
 
             # 变量初始化操作
             self.init = tf.global_variables_initializer()
+
+            #with tf.Session() as sess:
+            #    sess.run(self.init)
+
+    def __init_values__(self):
+        tf.Session().run(self.init)
+                
+    def train_by_sequence(self, input_sequence=[]):
+        sentence_num = input_sequence.__len__()
+
+        batch_inputs = []
+        batch_labels = []
+
+        for sent in input_sequence:
+            for i in range(sent.__len__()):
+                start = max(0, i-mod.window_size)
+                end = min(sent.__len__(), i+mod.window_size+1)
+
+                for index in range(start, end):
+                    if index == i:
+                        continue
+                    else:
+                        input_id = mod.dictionary[sent[i]]
+                        label_id = mod.dictionary[sent[index]]
+
+                        if not (input_id and label_id):
+                            continue
+
+                        batch_inputs.append(input_id)
+                        batch_labels.append(label_id)
+
+                        if len(batch_inputs) == 0:
+                            return
+                    
+        batch_inputs = np.array(batch_inputs, dtype=np.int32)
+        batch_labels = np.array(batch_labels, dtype=np.int32)
+        batch_labels = np.reshape(batch_labels, [batch_labels.__len__(), 1])
+
+        feed_dict = {
+            self.train_inputs:batch_inputs,
+            self.train_labels:batch_labels
+        }
+
+        with tf.Session() as sess:
+            loss_val = sess.run(self.loss, feed_dict=feed_dict)
+
+            self.train_loss_records.append(loss_val)
+            self.train_loss_k10 = np.mean(self.train_loss_records)
+            if self.train_sents_num % 1000 == 0 :
+                self.summary_writer.add_summary(self.summary_str,self.train_sents_num)
+                print("{a} sentences dealed, loss: {b}".format(a=self.train_sents_num,b=self.train_loss_k10))
