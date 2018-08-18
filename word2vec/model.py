@@ -64,6 +64,3 @@ class Word2vec:
 
             # 变量初始化操作
             self.init = tf.global_variables_initializer()
-
-
-    
