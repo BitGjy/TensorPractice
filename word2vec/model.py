@@ -15,6 +15,7 @@ class Word2vec:
 
         self.__collect_data__()
         self.__create_graph__()
+        self.__build_train__()
         
     def __collect_data__(self):
         self.filename = input.download_data(self.url, self.filename)
@@ -23,24 +24,28 @@ class Word2vec:
 
     def __create_graph__(self):
         with tf.name_scope("graph"):
-            self.train_inputs = tf.placeholder(tf.float32, shape=[self.batch_size])
-            self.train_labels = tf.placeholder(tf.float32, shape=[self.batch_size, 1])
+            self.graph = tf.Graph()
+            with self.graph.as_default():
+                self.train_inputs = tf.placeholder(tf.float32, shape=[self.batch_size])
+                self.train_labels = tf.placeholder(tf.float32, shape=[self.batch_size, 1])
 
-            self.embeddings = tf.Variable(tf.random_uniform([self.vocabulary_size, self.feature_size], -1.0, 1.0))
+                self.embeddings = tf.Variable(tf.random_uniform([self.vocabulary_size, self.feature_size], -1.0, 1.0))
             
-            self.nce_weights = tf.Variable(tf.truncated_normal(self.vocabulary_size, self.feature_size, stddev=1.0/np.sqrt(self.feature_size)))
-            self.nce_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
+                self.nce_weights = tf.Variable(tf.truncated_normal(self.vocabulary_size, self.feature_size, stddev=1.0/np.sqrt(self.feature_size)))
+                self.nce_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
 
-            self.embed = tf.nn.embedding_lookup(self.embeddings, self.train_inputs)
+                self.embed = tf.nn.embedding_lookup(self.embeddings, self.train_inputs)
 
-            self.loss = tf.reduce_mean(tf.nn.nce_loss(
-                weights=self.nce_weights,
-                biases=self.nce_biases,
-                labels=self.train_labels,
-                inputs=self.embed,
-                num_sampled=self.num_sampled,
-                num_classes=self.vocabulary_size
-            ))
+                self.loss = tf.reduce_mean(tf.nn.nce_loss(
+                    weights=self.nce_weights,
+                    biases=self.nce_biases,
+                    labels=self.train_labels,
+                    inputs=self.embed,
+                    num_sampled=self.num_sampled,
+                    num_classes=self.vocabulary_size
+                ))
+
+                tf.summary.scalar('loss', self.loss)
             
     def __build_train__(self):
         with tf.name_scope("train"):
@@ -49,6 +54,8 @@ class Word2vec:
             
             vec_l2_model = tf.sqrt(tf.reduce_sum(tf.square(self.embeddings), 1, keep_dims=True))
             avg_l2_model = tf.reduce_mean(vec_l2_model)
+
+            tf.summary.scalar('avg_l2_model', avg_l2_model)
 
             self.normed_embeddings = self.embeddings / vec_l2_model
             # self.embedding_dict = norm_vec # 对embedding向量正则化
