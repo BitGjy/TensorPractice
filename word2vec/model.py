@@ -91,15 +91,15 @@ class Word2vec:
 
         for sent in input_sequence:
             for i in range(sent.__len__()):
-                start = max(0, i-mod.window_size)
-                end = min(sent.__len__(), i+mod.window_size+1)
+                start = max(0, i-self.window_size)
+                end = min(sent.__len__(), i+self.window_size+1)
 
                 for index in range(start, end):
                     if index == i:
                         continue
                     else:
-                        input_id = mod.dictionary[sent[i]]
-                        label_id = mod.dictionary[sent[index]]
+                        input_id = self.dictionary[sent[i]]
+                        label_id = self.dictionary[sent[index]]
 
                         if not (input_id and label_id):
                             continue
