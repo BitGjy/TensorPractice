@@ -1,2 +1,2 @@
 # TensorPractice
-## This project aims to practice Deep Learning tools
+## This project aims to practice tensorflow.
